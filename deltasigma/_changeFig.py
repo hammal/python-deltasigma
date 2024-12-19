@@ -22,8 +22,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def changeFig(fontsize=None, linewidth=None, markersize=None, xfticks=False,
-              yfticks=False, bw=False, fig=None):
+def changeFig(
+    fontsize=None,
+    linewidth=None,
+    markersize=None,
+    xfticks=False,
+    yfticks=False,
+    bw=False,
+    fig=None,
+):
     """Quickly change several figure parameters.
 
     This function sweeps through all axes in the figure, and for each line and text item
@@ -90,26 +97,29 @@ def changeFig(fontsize=None, linewidth=None, markersize=None, xfticks=False,
         if fontsize is not None:
             _setAxLabelsFontsize(ax, fontsize)
             _setTextFontsize(ax, fontsize)
-        if xfticks == 'sci' and ax.xaxis.get_scale() == 'linear':
-            _setLabelsFormatter(ax.get_xaxis(), format_str='%.3E')
-        elif xfticks == 'plain' and ax.xaxis.get_scale() == 'linear':
-            ax.ticklabel_format(style='plain', axis='x')
-        if yfticks == 'sci' and ax.yaxis.get_scale() == 'linear':
-            _setLabelsFormatter(ax.get_yaxis(), format_str='%.3E')
-        elif yfticks == 'plain' and ax.xaxis.get_scale() == 'linear':
-            ax.ticklabel_format(style='plain', axis='y')
+        if xfticks == "sci" and ax.xaxis.get_scale() == "linear":
+            _setLabelsFormatter(ax.get_xaxis(), format_str="%.3E")
+        elif xfticks == "plain" and ax.xaxis.get_scale() == "linear":
+            ax.ticklabel_format(style="plain", axis="x")
+        if yfticks == "sci" and ax.yaxis.get_scale() == "linear":
+            _setLabelsFormatter(ax.get_yaxis(), format_str="%.3E")
+        elif yfticks == "plain" and ax.xaxis.get_scale() == "linear":
+            ax.ticklabel_format(style="plain", axis="y")
+
 
 def _setAxLinewidth(ax, linewidth=None, markersize=None, BW=False):
     """Take each Line2D in the axes, ax, and convert the line style
     Optionally also convert to BW, from http://tinyurl.com/qylqgoz
     """
-    LINES = [{'marker': None, 'dash': (None,None)},
-             {'marker': None, 'dash': [5,5]},
-             {'marker': None, 'dash': [5,3,1,3]},
-             {'marker': None, 'dash': [1,3]},
-             {'marker': None, 'dash': [5,2,5,2,5,10]},
-             {'marker': None, 'dash': [5,3,1,2,1,10]},
-             {'marker': 'o', 'dash': (None,None)}] #[1,2,1,10]}
+    LINES = [
+        {"marker": None, "dash": (None, None)},
+        {"marker": None, "dash": [5, 5]},
+        {"marker": None, "dash": [5, 3, 1, 3]},
+        {"marker": None, "dash": [1, 3]},
+        {"marker": None, "dash": [5, 2, 5, 2, 5, 10]},
+        {"marker": None, "dash": [5, 3, 1, 2, 1, 10]},
+        {"marker": "o", "dash": (None, None)},
+    ]  # [1,2,1,10]}
     COLORMAP = {}
 
     for line in ax.get_lines():
@@ -117,30 +127,35 @@ def _setAxLinewidth(ax, linewidth=None, markersize=None, BW=False):
             origColor = line.get_color()
             if not origColor in COLORMAP:
                 newColor = LINES.pop(0)
-                COLORMAP.update({origColor:newColor})
-            line.set_color('black')
-            line.set_dashes(COLORMAP[origColor]['dash'])
-            line.set_marker(COLORMAP[origColor]['marker'])
+                if newColor["marker"] is None:
+                    newColor["marker"] = ""
+                COLORMAP.update({origColor: newColor})
+            line.set_color("black")
+            line.set_dashes(COLORMAP[origColor]["dash"])
+            line.set_marker(COLORMAP[origColor]["marker"])
         if markersize is not None:
             line.set_markersize(markersize)
         if linewidth is not None:
             line.set_linewidth(linewidth)
 
+
 def _setAxLabelsFontsize(ax, fontsize):
-    """Change the font size of the axis labels
-    """
-    for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] +
-                 ax.get_xticklabels() + ax.get_yticklabels()):
+    """Change the font size of the axis labels"""
+    for item in (
+        [ax.title, ax.xaxis.label, ax.yaxis.label]
+        + ax.get_xticklabels()
+        + ax.get_yticklabels()
+    ):
         item.set_fontsize(fontsize)
 
+
 def _setTextFontsize(ax, fontsize):
-    """Change the font size of the text Artists
-    """
+    """Change the font size of the text Artists"""
     for artist in ax.get_children():
         if isinstance(artist, mpl.text.Text):
             artist.set_size(fontsize)
 
-def _setLabelsFormatter(ax, format_str='%.3E'):
+
+def _setLabelsFormatter(ax, format_str="%.3E"):
     form = lambda x, p: format_str % x
     ax.set_major_formatter(mpl.ticker.FuncFormatter(form))
-

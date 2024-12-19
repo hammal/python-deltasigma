@@ -50,7 +50,7 @@ def evalTFP(Hs, Hz, f):
     **Returns:**
 
     H : scalar, or ndarray or sequence
-        The calculated values: 
+        The calculated values:
 
         .. math::
 
@@ -58,7 +58,7 @@ def evalTFP(Hs, Hz, f):
 
         ``H`` has the same form as ``f``.
 
-    .. seealso:: 
+    .. seealso::
         :func:`evalMixedTF`, a more advanced version of this function
         which is used to evaluate the individual feed-in transfer functions of
         a CT modulator.
@@ -131,18 +131,19 @@ def evalTFP(Hs, Hz, f):
     form_f = save_input_form(f)
     f = carray(f)
     if not np.prod(f.shape) == max(f.shape):
-        raise ValueError("The f array must have shape " + 
-                         "(N,) or (N, 1) or (N, 1, 1) ...")
+        raise ValueError(
+            "The f array must have shape " + "(N,) or (N, 1) or (N, 1, 1) ..."
+        )
     f = f.reshape((-1,))
     # sanitize poles and zeros
     szeros, spoles = np.asarray(szeros), np.asarray(spoles)
     zzeros, zzeros = np.asarray(zzeros), np.asarray(zzeros)
     # back to business
-    slim = min(0.001, max(1e-05, eps**(1./(1 + spoles.size))))
-    zlim = min(0.001, max(1e-05, eps**(1./(1 + zzeros.size))))
+    slim = min(0.001, max(1e-05, eps ** (1.0 / (1 + spoles.size))))
+    zlim = min(0.001, max(1e-05, eps ** (1.0 / (1 + zzeros.size))))
     H = np.zeros(f.shape, dtype=np.complex128)
-    w = 2*np.pi*f
-    s = 1j*w
+    w = 2 * np.pi * f
+    s = 1j * w
     z = np.exp(s)
     for i in range(f.shape[0]):
         wi = w[i]
@@ -151,23 +152,28 @@ def evalTFP(Hs, Hz, f):
         if spoles.size == 0:
             cancel = False
         else:
-            cancel = (np.abs(si - spoles) < slim)
+            cancel = np.abs(si - spoles) < slim
         if not np.any(cancel):
             # wi is far from a pole, so just use the product Hs*Hz
-            H[i] = evalTF(Hs, si)*evalTF(Hz, zi)
+            H[i] = evalTF(Hs, si) * evalTF(Hz, zi)
         else:
             # cancel pole(s) of Hs with corresponding zero(s) of Hz
             cancelz = np.abs(zi - zzeros) < zlim
             if np.sum(cancelz) > np.sum(cancel):
-                H[i] = 0.
+                H[i] = 0.0
             else:
                 if np.sum(cancelz) < np.sum(cancel):
-                    H[i] = np.Inf
+                    H[i] = np.inf
                 else:
-                    H[i] = evalRPoly(szeros, si, sk)*zi**np.sum(cancel) \
-                           * evalRPoly(zzeros[~cancelz], zi, zk) \
-                           / (evalRPoly(spoles[~cancel], si, 1.)  \
-                              * evalRPoly(zpoles, zi, 1.))
+                    H[i] = (
+                        evalRPoly(szeros, si, sk)
+                        * zi ** np.sum(cancel)
+                        * evalRPoly(zzeros[~cancelz], zi, zk)
+                        / (
+                            evalRPoly(spoles[~cancel], si, 1.0)
+                            * evalRPoly(zpoles, zi, 1.0)
+                        )
+                    )
     # return H matching the shape of f
     H = restore_input_form(H, form_f)
     return H

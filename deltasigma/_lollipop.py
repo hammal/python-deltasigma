@@ -4,7 +4,7 @@
 # Copyright 2013 Giuseppe Venturini
 # This file is part of python-deltasigma.
 #
-# python-deltasigma is a 1:1 Python replacement of Richard Schreier's 
+# python-deltasigma is a 1:1 Python replacement of Richard Schreier's
 # MATLAB delta sigma toolbox (aka "delsigma"), upon which it is heavily based.
 # The delta sigma toolbox is (c) 2009, Richard Schreier.
 #
@@ -24,16 +24,17 @@ import matplotlib.pyplot as plt
 
 
 # Plot lollipops (o's and sticks)
-# 
+#
 #       ^
-#       | o     o     o         o o o   o o 
-#       | |   o | o o | o     o | | | o | | 
-#       | | o | | | | | | o o | | | | | | | 
+#       | o     o     o         o o o   o o
+#       | |   o | o o | o     o | | | o | |
+#       | | o | | | | | | o o | | | | | | |
 #       +----------------------------------->
+
 
 def lollipop(x, y, color=None, lw=2, ybot=0):
     """Plot lollipops (o's and sticks)
-    
+
     **Parameters:**
 
     x, y : ndarrays
@@ -51,7 +52,7 @@ def lollipop(x, y, color=None, lw=2, ybot=0):
     **Returns:**
 
     None
-    
+
     **Example:**
 
     .. plot::
@@ -69,19 +70,25 @@ def lollipop(x, y, color=None, lw=2, ybot=0):
     """
 
     if ybot:
-        warn('lollipop() got a non-zero ybot, but only ybot=0 is ' + \
-             'supported. Setting ybot to 0.')
-    
-    if (sys.version_info.minor <= 5):
-        markerline, stemlines, baseline = plt.stem(x, y, '-')
+        warn(
+            "lollipop() got a non-zero ybot, but only ybot=0 is "
+            + "supported. Setting ybot to 0."
+        )
+
+    if sys.version_info.minor <= 5:
+        markerline, stemlines, baseline = plt.stem(x, y, "-")
     else:
-        markerline, stemlines, baseline = plt.stem(x, y, '-', use_line_collection=False)
-    
-    if not color or color == 'None':
-        color = stemlines[0].get_color()
-    lolli_fmt = {'linewidth': lw, 'color': color}
-    pop_fmt = {'mec': color, 'markerfacecolor':'None',  \
-               'markersize':10, 'markeredgewidth': lw*1.1}
+        markerline, stemlines, baseline = plt.stem(x, y, "-")
+
+    if not color or color == "None":
+        color = stemlines.get_color()[0]
+    lolli_fmt = {"linewidth": lw, "color": color}
+    pop_fmt = {
+        "mec": color,
+        "markerfacecolor": "None",
+        "markersize": 10,
+        "markeredgewidth": lw * 1.1,
+    }
     plt.setp(markerline, **pop_fmt)
     plt.setp(stemlines, **lolli_fmt)
-    plt.setp(baseline, 'color','k')
+    plt.setp(baseline, "color", "k")

@@ -21,7 +21,7 @@ import numpy as np
 
 
 def ds_hann(n):
-    """A Hann window of length :math:`n`. 
+    """A Hann window of length :math:`n`.
 
     The Hann window, aka *the raised cosine window*, is defined as:
 
@@ -60,5 +60,5 @@ def ds_hann(n):
       plt.ylabel("Value")
 
     """
-    x = np.arange(n, dtype='float_')
-    return .5*(1 - np.cos(2*np.pi*x/n))
+    x = np.arange(n, dtype=np.float64)
+    return 0.5 * (1 - np.cos(2 * np.pi * x / n))

@@ -26,7 +26,7 @@ from ._simulateDSM import simulateDSM
 from ._simulateQDSM import simulateQDSM
 
 
-def scaleABCD(ABCD, nlev=2, f=0, xlim=1, ymax=None, umax=None, N_sim=100000, N0=10):
+def scaleABCD(ABCD, nlev=2, f=0.0, xlim=1.0, ymax=None, umax=None, N_sim=100000, N0=10):
     """Scale the loop filter of a general delta-sigma modulator for dynamic range.
 
     The ABCD matrix is scaled so that the state maxima are less than the
@@ -81,63 +81,72 @@ def scaleABCD(ABCD, nlev=2, f=0, xlim=1, ymax=None, umax=None, N_sim=100000, N0=
     if ymax is None:
         ymax = nlev + 5
     order = ABCD.shape[0] - 1
-    xlim = xlim*np.ones((order,)) if np.isscalar(xlim) else xlim.reshape((-1, ))
+    xlim = xlim * np.ones((order,)) if np.isscalar(xlim) else xlim.reshape((-1,))
     if np.isreal(ABCD).all():
         quadrature = False
     else:
         quadrature = True
-    npr.seed(0) # So that this function is repeatable
+    npr.seed(0)  # So that this function is repeatable
     # Envelope for smooth start-up
-    raised_cosine = 0.5*(1 - np.cos(np.pi/N0*np.arange(N0)))
+    raised_cosine = 0.5 * (1 - np.cos(np.pi / N0 * np.arange(N0)))
 
     if umax is None:
         # Simulate the modulator with DC or sine wave inputs to detect its stable
         # input range.
         # First get a rough estimate of umax.
-        ulist = np.arange(0.1, 1.1, 0.1)*(nlev - 1)
-        umax = nlev - 1
+        ulist = np.arange(0.1, 1.1, 0.1) * (nlev - 1)
+        umax = nlev - 1.0
         N = 1000
-        u0 = np.hstack((np.exp(2j*np.pi*f*np.arange(-N0, 0))*raised_cosine, \
-                        np.exp(2j*np.pi*f*np.arange(0, N)))) \
-             + 0.01*np.dot(np.array([[1, 1j]]), npr.randn(2, N + N0))
+        u0 = np.hstack(
+            (
+                np.exp(2j * np.pi * f * np.arange(-N0, 0)) * raised_cosine,
+                np.exp(2j * np.pi * f * np.arange(0, N)),
+            )
+        ) + 0.01 * np.dot(np.array([[1, 1j]]), npr.randn(2, N + N0))
         if not quadrature:
             u0 = np.real(u0)
         for u in ulist:
             if not quadrature:
-                v, x, xmax, y = simulateDSM(u*u0, ABCD, nlev)
+                v, x, xmax, y = simulateDSM(u * u0, ABCD, nlev)
             else:
-                v, x, xmax, y = simulateQDSM(u*u0, ABCD, nlev)
+                v, x, xmax, y = simulateQDSM(u * u0, ABCD, nlev)
             if np.max(np.abs(y)) > ymax:
                 umax = u
                 # umax is the smallest input found which causes 'instability'
                 break
         if umax == ulist[0]:
-            msg = 'Modulator is unstable even with an input amplitude of %.1f.'\
-             % umax
+            msg = "Modulator is unstable even with an input amplitude of %.1f." % umax
             raise RuntimeError(msg)
 
     # More detailed simulation
     N = N_sim
-    u0 = np.hstack((np.exp(2j*np.pi*f*np.arange(-N0, 0))*raised_cosine, \
-                    np.exp(2j*np.pi*f*np.arange(0, N)))) \
-         + 0.01*np.dot(np.array([[1, 1j]]), npr.randn(2, int(N + N0)))
+    u0 = np.hstack(
+        (
+            np.exp(2j * np.pi * f * np.arange(-N0, 0)) * raised_cosine,
+            np.exp(2j * np.pi * f * np.arange(0, N)),
+        )
+    ) + 0.01 * np.dot(np.array([[1, 1j]]), npr.randn(2, int(N + N0)))
     if not quadrature:
         u0 = np.real(u0)
     maxima = np.zeros((1, order)) - 1
-    ulist = np.linspace(0.7*umax, umax, 10)
+    ulist = np.linspace(0.7 * umax, umax, 10)
     for u in ulist:
         if not quadrature:
-            v, x, xmax, y = simulateDSM(u*u0, ABCD, nlev)
+            v, x, xmax, y = simulateDSM(u * u0, ABCD, nlev)
         else:
-            v, x, xmax, y = simulateQDSM(u*u0, ABCD, nlev)
+            v, x, xmax, y = simulateQDSM(u * u0, ABCD, nlev)
         if np.max(np.abs(y)) > ymax:
             break
         umax = u
         maxima = np.max(np.vstack((maxima, xmax.T)), axis=0, keepdims=True)
-    scale = (maxima/xlim).reshape((-1))
-    S = np.diag(1.0/scale)
+    scale = (maxima / xlim).reshape((-1))
+    S = np.diag(1.0 / scale)
     Sinv = np.diag(scale)
     A, B, C, D = partitionABCD(ABCD)
-    ABCDs = np.vstack((np.hstack((np.dot(np.dot(S, A), Sinv), np.dot(S, B))),
-                       np.hstack((np.dot(C, Sinv), D))))
+    ABCDs = np.vstack(
+        (
+            np.hstack((np.dot(np.dot(S, A), Sinv), np.dot(S, B))),
+            np.hstack((np.dot(C, Sinv), D)),
+        )
+    )
     return ABCDs, umax, S

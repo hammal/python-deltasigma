@@ -56,15 +56,15 @@ def calculateSNR(hwfft, f, nsig=1):
 
     """
     hwfft = hwfft.squeeze()
-    signalBins = np.arange(f - nsig + 1, f + nsig + 2, dtype='int64')
+    signalBins = np.arange(f - nsig + 1, f + nsig + 2, dtype="int64")
     signalBins = signalBins[signalBins > 0]
     signalBins = signalBins[signalBins <= max(hwfft.shape)]
-    s = norm(hwfft[signalBins - 1]) # *4/(N*sqrt(3)) for true rms value;
-    noiseBins = np.arange(1, max(hwfft.shape) + 1, dtype='int64')
+    s = norm(hwfft[signalBins - 1])  # *4/(N*sqrt(3)) for true rms value;
+    noiseBins = np.arange(1, max(hwfft.shape) + 1, dtype="int64")
     noiseBins = np.delete(noiseBins, noiseBins[signalBins - 1] - 1)
     n = norm(hwfft[noiseBins - 1])
     if n == 0:
-        snr = np.Inf
+        snr = np.inf
     else:
-        snr = dbv(s/n)
+        snr = dbv(s / n)
     return snr
