@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 # _simulateDSM.py
 # Module providing the simulateDSM function,
-# a switch to select the fastest simulation routine.
-# This file is part of python-deltasigma.
+#
 #
 # python-deltasigma is a 1:1 Python replacement of Richard Schreier's
 # MATLAB delta sigma toolbox (aka "delsigma"), upon which it is heavily based.
@@ -26,14 +25,8 @@
 
 from __future__ import print_function
 
-import os
-from warnings import warn
 
-import numpy as np
-
-from ._config import _debug, setup_args
 from ._simulateDSM_python import simulateDSM as _simulateDSM_python
-from ._utils import _get_zpk, _is_zpk
 
 warned = False
 
@@ -42,39 +35,8 @@ warned = False
 # please report any bug (or patches!) on
 # https://github.com/ggventurini/python-deltasigma/issues
 
-try:
-    """
-    if 'nt' in os.name:
-        # if somebody actually goes through the trouble of compiling
-        # it on Windows, we'll make available a patch to re-enable it.
-        # In most cases now, users only get error messages from BLAS
-        # not being available.
-        raise ImportError('CBLAS extension disabled on Windows')
-    """
-    import pyximport
-    pyximport.install(setup_args=setup_args, language_level=3)
-    from ._simulateDSM_cblas import simulateDSM as _simulateDSM_cblas
-except ImportError as e:
-    if _debug:
-        print(str(e))
-    _simulateDSM_cblas = None
 
-try:
-    import pyximport
-    pyximport.install(setup_args=setup_args, inplace=True, language_level=3)
-    from ._simulateDSM_scipy_blas import simulateDSM as _simulateDSM_scipy_blas
-except ImportError as e:
-    if _debug:
-        print(str(e))
-    _simulateDSM_scipy_blas = None
-
-# fall back to CPython
-
-simulation_backends = {'CBLAS':(_simulateDSM_cblas is not None),
-                       'Scipy_BLAS':(_simulateDSM_scipy_blas is not None),
-                       'CPython':True}
-
-def simulateDSM(u, arg2, nlev=2, x0=0.):
+def simulateDSM(u, arg2, nlev=2, x0=0.0):
     """Simulate a delta-sigma modulator.
 
     Compute the output of a general delta-sigma modulator with input ``u``,
@@ -202,18 +164,4 @@ def simulateDSM(u, arg2, nlev=2, x0=0.):
 
     Click on "Source" above to see the source code.
     """
-    global warned
-    if _simulateDSM_cblas or _simulateDSM_scipy_blas:
-        if not _is_zpk(arg2) and not isinstance(arg2, np.ndarray):
-            arg2 = _get_zpk(arg2)
-        if _simulateDSM_cblas:
-            return _simulateDSM_cblas(u, arg2, nlev, x0, store_xn=True,
-                                      store_xmax=True, store_y=True)
-        return _simulateDSM_scipy_blas(u, arg2, nlev, x0, store_xn=True,
-                                       store_xmax=True, store_y=True)
-    else:
-        if not warned:
-            warn('Using a slow implementation of simulateDSM\n' +
-                 'Refer to the docs for how to switch to a fast one')
-            warned = True
-        return _simulateDSM_python(u, arg2, nlev, x0)
+    return _simulateDSM_python(u, arg2, nlev, x0)

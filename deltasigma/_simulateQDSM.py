@@ -28,7 +28,8 @@ from scipy.linalg import lstsq
 from scipy.signal import freqz, tf2zpk
 
 from ._config import _debug, setup_args
-#from ._ds_quantize import ds_quantize
+
+# from ._ds_quantize import ds_quantize
 from ._evalTF import evalTF
 from ._partitionABCD import partitionABCD
 from ._utils import carray, diagonal_indices, _is_zpk, _is_A_B_C_D, _is_num_den
@@ -37,8 +38,9 @@ from ._utils import carray, diagonal_indices, _is_zpk, _is_A_B_C_D, _is_num_den
 # core of the simulation code`
 try:
     import pyximport
+
     pyximport.install(setup_args=setup_args, inplace=True)
-    #from ._simulateQDSM_core import simulateQDSM_core
+    # from ._simulateQDSM_core import simulateQDSM_core
 except ImportError as e:
     if _debug:
         print(str(e))
@@ -46,6 +48,8 @@ except ImportError as e:
     pass
 
 from ._simulateQDSM_core import simulateQDSM_core
+
+
 def simulateQDSM(u, arg2, nlev=2, x0=None):
     """Simulate a quadrature delta-sigma modulator.
 
@@ -106,12 +110,12 @@ def simulateQDSM(u, arg2, nlev=2, x0=None):
     if len(u.shape) == 1:
         u = u.reshape((1, -1))
     nu = u.shape[0]
-    if hasattr(nlev, '__len__'):
+    if hasattr(nlev, "__len__"):
         nlev = np.atleast_1d(nlev)
         nq = max(nlev.shape)
     else:
         nq = 1
-    if isinstance(arg2, scipy.signal.lti):
+    if isinstance(arg2, scipy.signal.dlti):
         k = arg2.k
         zeros = np.asarray(arg2.z)
         poles = np.asarray(arg2.p)
@@ -123,20 +127,21 @@ def simulateQDSM(u, arg2, nlev=2, x0=None):
         poles = np.asarray(poles)
         form = 2
         order = max(zeros.shape)
-    elif isinstance(arg2, np.ndarray): # ABCD
+    elif isinstance(arg2, np.ndarray):  # ABCD
         if arg2.shape[1] > 2 and arg2.shape[1] == nu + arg2.shape[0]:
             # ABCD dimesions OK
             form = 1
             ABCD = arg2
             order = ABCD.shape[0] - nq
         else:
-            raise ValueError('The ABCD argument does not have proper ' +
-                             'dimensions.')
+            raise ValueError("The ABCD argument does not have proper " + "dimensions.")
     elif _is_A_B_C_D(arg2):
-        ABCD = np.vstack((np.hstack((np.atleast_2d(arg2[0]),
-                                     np.atleast_2d(arg2[1]))),
-                          np.hstack((np.atleast_2d(arg2[2]),
-                                     np.atleast_2d(arg2[3])))))
+        ABCD = np.vstack(
+            (
+                np.hstack((np.atleast_2d(arg2[0]), np.atleast_2d(arg2[1]))),
+                np.hstack((np.atleast_2d(arg2[2]), np.atleast_2d(arg2[3]))),
+            )
+        )
         form = 1
         order = ABCD.shape[0] - nq
     elif _is_num_den(arg2):
@@ -144,38 +149,40 @@ def simulateQDSM(u, arg2, nlev=2, x0=None):
         form = 2
         order = max(zeros.shape)
     else:
-        raise TypeError('The second argument is neither an ABCD matrix nor ' +
-                        'an NTF.')
+        raise TypeError(
+            "The second argument is neither an ABCD matrix nor " + "an NTF."
+        )
 
     if x0 is None:
-        x0 = np.zeros(shape=(order, 1), dtype='complex128')
+        x0 = np.zeros(shape=(order, 1), dtype="complex128")
     else:
         x0 = carray(x0)
-        x0 = np.atleast_2d(x0).astype('complex128')
+        x0 = np.atleast_2d(x0).astype("complex128")
     if form == 1:
         A, B, C, D = partitionABCD(ABCD, nq + nu)
-        A = A.astype('complex128')
-        B = B.astype('complex128')
-        C = C.astype('complex128')
-        D = D.astype('complex128')
+        A = A.astype("complex128")
+        B = B.astype("complex128")
+        C = C.astype("complex128")
+        D = D.astype("complex128")
         D1 = D[:, :nu].reshape((-1, nu))
     else:
         # Create a FF realization of 1-1/H.
         # Note that MATLAB's zp2ss and canon functions don't work for complex
         # TFs.
-        A = np.zeros(shape=(order, order), dtype='complex128')
-        B2 = np.vstack((np.atleast_2d(1), np.zeros(shape=(order-1, 1),
-                                                   dtype='complex128')))
+        A = np.zeros(shape=(order, order), dtype="complex128")
+        B2 = np.vstack(
+            (np.atleast_2d(1), np.zeros(shape=(order - 1, 1), dtype="complex128"))
+        )
         diag = diagonal_indices(A, 0)
         A[diag] = zeros
         subdiag = diagonal_indices(A, -1)
-        A[subdiag] = 1.
+        A[subdiag] = 1.0
         # Compute C st C*inv(zI-A)*B = 1-1/H(z);
-        w = 2*np.pi*np.random.rand(2*order)
-        desired = 1 - 1.0/evalTF((zeros, poles, k), np.exp(1j*w))
+        w = 2 * np.pi * np.random.rand(2 * order)
+        desired = 1 - 1.0 / evalTF((zeros, poles, k), np.exp(1j * w))
         desired.reshape((1, -1))
         # suppress warnings about complex TFs ???
-        sysresp = np.zeros((order, w.shape[0]), dtype='complex128')
+        sysresp = np.zeros((order, w.shape[0]), dtype="complex128")
         for i in range(order):
             Ctemp = np.zeros((1, order))
             Ctemp[0, i] = 1
@@ -186,7 +193,6 @@ def simulateQDSM(u, arg2, nlev=2, x0=None):
         # !!!! Assume stf=1
         B1 = -B2
         B = np.hstack((B1, B2))
-        D1 = np.ones((1, 1), dtype='complex128')
+        D1 = np.ones((1, 1), dtype="complex128")
     v, xn, xmax, y = simulateQDSM_core(u, A, B, C, D1, order, nlev, nq, x0)
     return v.squeeze(), xn.squeeze(), xmax, y.squeeze()
-

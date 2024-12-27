@@ -5,5 +5,5 @@ scipy
 matplotlib
 cython
 #nose
-setuptools
+# setuptools
 coverage

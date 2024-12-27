@@ -4,7 +4,7 @@
 # Copyright 2013 Giuseppe Venturini
 # This file is part of python-deltasigma.
 #
-# python-deltasigma is a 1:1 Python replacement of Richard Schreier's 
+# python-deltasigma is a 1:1 Python replacement of Richard Schreier's
 # MATLAB delta sigma toolbox (aka "delsigma"), upon which it is heavily based.
 # The delta sigma toolbox is (c) 2009, Richard Schreier.
 #
@@ -22,14 +22,14 @@ import matplotlib.pyplot as plt
 from ._utils import _get_zpk
 
 
-def plotPZ(H, color='b', markersize=5, showlist=False):
+def plotPZ(H, color="b", markersize=5, showlist=False):
     """Plot the poles and zeros of a transfer function.
 
     **Parameters:**
 
     H : transfer function
-        Any supported transfer function representation, 
-        eg num/den, zpk, lti...
+        Any supported transfer function representation,
+        eg num/den, zpk, dlti...
 
     color : Any matplotlib-compatible color descr, optional
         For example, 'r' for 'red' or '#000080' for 'navy'.
@@ -67,69 +67,76 @@ def plotPZ(H, color='b', markersize=5, showlist=False):
     #
     # For Richard Schreier's Delta Sigma toolbox
     # Copyright (c) 2009, Richard Schreier
-    
+
     z, p, _ = _get_zpk(H)
     p = np.real_if_close(np.round(p, 5))
     z = np.real_if_close(np.round(z, 5))
 
-    pole_fmt = {'marker': 'x', 'markersize': markersize}
-    zero_fmt = {'marker': 'o', 'markersize': markersize}
+    pole_fmt = {"marker": "x", "markersize": markersize}
+    zero_fmt = {"marker": "o", "markersize": markersize}
 
     if isinstance(color, list) or isinstance(color, tuple):
-        pole_fmt['color'] = color[0]
-        zero_fmt['color'] = color[1]
+        pole_fmt["color"] = color[0]
+        zero_fmt["color"] = color[1]
     else:
-        pole_fmt['color'] = color
-        zero_fmt['color'] = color
+        pole_fmt["color"] = color
+        zero_fmt["color"] = color
 
     # hold_status = plt.ishold()
     plt.grid(True)
 
     # Plot x and o for poles and zeros, respectively
-    plt.plot(p.real, p.imag, linestyle='None', **pole_fmt)
-    #plt.plot(p.real, p.imag, linestyle='None', marker='x', markersize=markersize, mew=markersize)
-    
+    plt.plot(p.real, p.imag, linestyle="None", **pole_fmt)
+    # plt.plot(p.real, p.imag, linestyle='None', marker='x', markersize=markersize, mew=markersize)
+
     if len(z) > 0:
-        plt.plot(z.real, z.imag, linestyle='None', **zero_fmt)
-        #plt.plot(z.real, z.imag, linestyle='None', marker='x', markersize=markersize, mew=markersize)
+        plt.plot(z.real, z.imag, linestyle="None", **zero_fmt)
+        # plt.plot(z.real, z.imag, linestyle='None', marker='x', markersize=markersize, mew=markersize)
 
     # Draw unit circle, real axis and imag axis
-    circle = np.exp(2j*np.pi*np.linspace(0, 1, 100))
+    circle = np.exp(2j * np.pi * np.linspace(0, 1, 100))
     plt.plot(circle.real, circle.imag)
-    
+
     ax = plt.gca()
     ax.set_autoscale_on(False)
     if showlist:
         ax = plt.gca()
         x1, x2, y1, y2 = ax.axis()
-        x2 = np.round((x2 - x1)*1.48 + x1, 1)
+        x2 = np.round((x2 - x1) * 1.48 + x1, 1)
         ax.axis((x1, x2, y1, y2))
-        markers = [] 
+        markers = []
         descr = []
         ps = p[p.imag >= 0]
         for pi in ps:
-            markers += [plt.Line2D((), (), linestyle='None', **pole_fmt)]
+            markers += [plt.Line2D((), (), linestyle="None", **pole_fmt)]
             if np.allclose(pi.imag, 0, atol=1e-5):
-                descr += ['%+.4f' % pi.real]
+                descr += ["%+.4f" % pi.real]
             else:
-                descr += ['%+.4f+/-j%.4f' %  (pi.real, pi.imag)]
+                descr += ["%+.4f+/-j%.4f" % (pi.real, pi.imag)]
         if len(z) > 0:
             for zi in z[z.imag >= 0]:
-                markers += [plt.Line2D((), (), linestyle='None', **zero_fmt)]
+                markers += [plt.Line2D((), (), linestyle="None", **zero_fmt)]
                 if zi.imag == 0:
-                    descr += ['%+.4f' % zi.real]
+                    descr += ["%+.4f" % zi.real]
                 else:
-                    descr += ['%+.4f +/-j%.4f' % (zi.real, zi.imag)]
-        plt.legend(markers, descr, title="Poles (x) and zeros (o)", ncol=1, loc='best', 
-                   handlelength=.55, prop={'size':10})
+                    descr += ["%+.4f +/-j%.4f" % (zi.real, zi.imag)]
+        plt.legend(
+            markers,
+            descr,
+            title="Poles (x) and zeros (o)",
+            ncol=1,
+            loc="best",
+            handlelength=0.55,
+            prop={"size": 10},
+        )
     else:
         plt.xlim((-1.1, 1.1))
         plt.ylim((-1.1, 1.1))
-    plt.gca().set_aspect('equal')
-    
+    plt.gca().set_aspect("equal")
+
     # plt.axes().set_aspect('equal', 'datalim')
-    plt.ylabel('Imag')
-    plt.xlabel('Real')
+    plt.ylabel("Imag")
+    plt.xlabel("Real")
 
     """
     if not hold_status:

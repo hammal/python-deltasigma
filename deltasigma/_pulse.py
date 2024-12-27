@@ -22,7 +22,7 @@ from __future__ import division
 import collections
 
 import numpy as np
-from scipy.signal import lti, step
+from scipy.signal import dlti, step
 
 from ._utils import _is_A_B_C_D, _is_num_den, _is_zpk, lcm, rat
 
@@ -84,7 +84,7 @@ def pulse(S, tp=(0.0, 1.0), dt=1.0, tfinal=10.0, nosum=False):
         (isinstance(S, collections.abc.Iterable) and len(S))
         and (isinstance(S[0], collections.abc.Iterable) and len(S[0]))
         and (
-            isinstance(S[0][0], lti)
+            isinstance(S[0][0], dlti)
             or _is_zpk(S[0][0])
             or _is_num_den(S[0][0])
             or _is_A_B_C_D(S[0][0])

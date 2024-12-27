@@ -69,7 +69,7 @@ def evalTFP(Hs, Hz, f):
 
         import numpy as np
         import pylab as plt
-        from scipy.signal import lti
+        from scipy.signal import dlti
         from deltasigma import *
         from deltasigma._utils import _get_zpk
         Ac = np.array([[0, 0], [1, 0]])
@@ -80,7 +80,7 @@ def evalTFP(Hs, Hz, f):
         L0c = _get_zpk((Ac, Bc[:, 0].reshape((-1, 1)), Cc, Dc[0, 0].reshape(1, 1)))
         tdac = [0, 1]
         LF, Gp = mapCtoD(LFc, tdac)
-        LF = lti(*LF)
+        LF = dlti(*LF)
         ABCD = np.vstack((np.hstack((LF.A, LF.B)),
                           np.hstack((LF.C, LF.D))
                         ))
@@ -98,7 +98,7 @@ def evalTFP(Hs, Hz, f):
 
         import numpy as np
         import pylab as plt
-        from scipy.signal import lti
+        from scipy.signal import dlti
         from deltasigma import *
         from deltasigma._utils import _get_zpk
         Ac = np.array([[0, 0], [1, 0]])
@@ -109,7 +109,7 @@ def evalTFP(Hs, Hz, f):
         L0c = _get_zpk((Ac, Bc[:, 0].reshape((-1, 1)), Cc, Dc[0, 0].reshape(1, 1)))
         tdac = [0, 1]
         LF, Gp = mapCtoD(LFc, tdac)
-        LF = lti(*LF)
+        LF = dlti(*LF)
         ABCD = np.vstack((np.hstack((LF.A, LF.B)),
                           np.hstack((LF.C, LF.D))
                         ))

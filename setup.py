@@ -2,7 +2,9 @@
 
 import os
 from setuptools import setup, find_packages
+
 __version__ = "0.2.6"
+
 
 def read(fname):
     try:
@@ -11,26 +13,26 @@ def read(fname):
     except IOError:
         return ""
 
+
 setup(
-    name='deltasigma',
+    name="deltasigma",
     version=__version__,
-    packages=find_packages(exclude=['beta']),
-    package_data={
-      'deltasigma': ['tests/test_data/*.mat', 'tests/test_data/*.txt']
-    },
-    install_requires=['numpy', 'scipy', 'matplotlib>=3.0.0'],
+    packages=find_packages(exclude=["beta"]),
+    package_data={"deltasigma": ["tests/test_data/*.mat", "tests/test_data/*.txt"]},
+    install_requires=["numpy", "scipy", "matplotlib>=3.0.0"],
     zip_safe=False,
     include_package_data=True,
     author="Giuseppe Venturini and others",
     author_email="giuseppe.g.venturini@ieee.org",
-    description="a Python package to synthesize, simulate, scale and map " + \
-                "to implementable topologies delta sigma modulators.",
-    long_description=''.join([read('pypi_description.rst'), '\n\n',
-                              read('CHANGES.rst')]),
+    description="a Python package to synthesize, simulate, scale and map "
+    + "to implementable topologies delta sigma modulators.",
+    long_description="".join(
+        [read("pypi_description.rst"), "\n\n", read("CHANGES.rst")]
+    ),
     license="BSD",
     keywords="delta sigma modulator simulator",
     url="http://github.com/ggventurini/python-deltasigma",
-    test_suite = "deltasigma.tests",
+    test_suite="deltasigma.tests",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Education",
@@ -45,6 +47,5 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
-    ]
+    ],
 )
-

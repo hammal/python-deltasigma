@@ -19,14 +19,14 @@
 from warnings import warn
 
 import numpy as np
-from scipy.signal import lti, ss2zpk
+from scipy.signal import dlti, ss2zpk
 
 from ._constants import eps
 from ._partitionABCD import partitionABCD
 from ._utils import carray, minreal
 
 
-def calculateTF(ABCD, k=1.):
+def calculateTF(ABCD, k=1.0):
     """Calculate the NTF and STF of a delta-sigma modulator.
 
     The calculation is performed for a given loop filter
@@ -48,9 +48,9 @@ def calculateTF(ABCD, k=1.):
     **Returns:**
 
     (NTF, STF) : a tuple of two LTI objects (or of two lists of LTI objects).
-                 If a version of the ``scipy`` library equal to 0.16.x or 
+                 If a version of the ``scipy`` library equal to 0.16.x or
                  greater is in use, the objects will be ``ZeroPolesGain``
-                 objects, a subclass of ``scipy.signal.lti``.
+                 objects, a subclass of ``scipy.signal.dlti``.
 
     If the system has multiple quantizers, multiple STFs and NTFs will be
     returned.
@@ -123,7 +123,7 @@ def calculateTF(ABCD, k=1.):
     """
 
     nq = len(k) if type(k) in (tuple, list) else 1
-    A, B, C, D = partitionABCD(ABCD, m=nq+1, r=nq)
+    A, B, C, D = partitionABCD(ABCD, m=nq + 1, r=nq)
     k = carray(k)
     diagk = np.atleast_2d(np.diag(k))
 
@@ -158,13 +158,12 @@ def calculateTF(ABCD, k=1.):
 
     # Find the noise transfer function by forming the closed-loop
     # system (sys_cl) in state-space form.
-    Ct = np.linalg.inv(np.eye(nq) - D2*diagk)
+    Ct = np.linalg.inv(np.eye(nq) - D2 * diagk)
     Acl = A + np.dot(B2, np.dot(Ct, np.dot(diagk, C)))
-    Bcl = np.hstack((B1 + np.dot(B2, np.dot(Ct, np.dot(diagk, D1))),
-                     np.dot(B2, Ct)))
+    Bcl = np.hstack((B1 + np.dot(B2, np.dot(Ct, np.dot(diagk, D1))), np.dot(B2, Ct)))
     Ccl = np.dot(Ct, np.dot(diagk, C))
     Dcl = np.dot(Ct, np.hstack((np.dot(diagk, D1), np.eye(nq))))
-    tol = min(1e-3, max(1e-6, eps**(1/ABCD.shape[0])))
+    tol = min(1e-3, max(1e-6, eps ** (1 / ABCD.shape[0])))
     ntfs = np.empty((nq, Dcl.shape[0]), dtype=np.object_)
     stfs = np.empty((Dcl.shape[0],), dtype=np.object_)
 
@@ -172,11 +171,11 @@ def calculateTF(ABCD, k=1.):
     for i in range(Dcl.shape[0]):
         # input #0 is the signal
         # inputs #1,... are quantization noise
-        stf_z, stf_p, stf_k  = ss2zpk(Acl, Bcl, Ccl[i, :], Dcl[i, :], input=0)
-        stf = lti(stf_z, stf_p, stf_k)
+        stf_z, stf_p, stf_k = ss2zpk(Acl, Bcl, Ccl[i, :], Dcl[i, :], input=0)
+        stf = dlti(stf_z, stf_p, stf_k)
         for j in range(nq):
-            ntf_z, ntf_p, ntf_k = ss2zpk(Acl, Bcl, Ccl[i, :], Dcl[i, :], input=j+1)
-            ntf = lti(ntf_z, ntf_p, ntf_k)
+            ntf_z, ntf_p, ntf_k = ss2zpk(Acl, Bcl, Ccl[i, :], Dcl[i, :], input=j + 1)
+            ntf = dlti(ntf_z, ntf_p, ntf_k)
             stf_min, ntf_min = minreal((stf, ntf), tol)
             ntfs[i, j] = ntf_min
         stfs[i] = stf_min
@@ -185,4 +184,3 @@ def calculateTF(ABCD, k=1.):
     if ntfs.shape == (1, 1):
         return [ntfs[0, 0], stfs[0]]
     return ntfs, stfs
-

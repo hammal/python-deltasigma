@@ -36,7 +36,7 @@ def predictSNR(ntf, OSR=64, amp=None, f0=0.0):
 
     **Parameters:**
 
-    ntf : lti object, or zpk or (num, den) or (A,B,C,D) tuples
+    ntf : dlti object, or zpk or (num, den) or (A,B,C,D) tuples
         The noise transfer function specifying the modulator.
 
     OSR : scalar, optional

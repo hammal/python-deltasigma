@@ -4,7 +4,7 @@
 # Copyright 2013 Giuseppe Venturini
 # This file is part of python-deltasigma.
 #
-# python-deltasigma is a 1:1 Python replacement of Richard Schreier's 
+# python-deltasigma is a 1:1 Python replacement of Richard Schreier's
 # MATLAB delta sigma toolbox (aka "delsigma"), upon which it is heavily based.
 # The delta sigma toolbox is (c) 2009, Richard Schreier.
 #
@@ -21,7 +21,7 @@ from __future__ import division
 import copy
 
 import numpy as np
-from scipy.signal import lti
+from scipy.signal import dlti
 
 
 def cancelPZ(arg1, tol=1e-6):
@@ -32,7 +32,7 @@ def cancelPZ(arg1, tol=1e-6):
     arg1 : LTI system description
         Multiple descriptions are supported for the LTI system.
 
-        If one argument is used, it is a scipy ``lti`` object.
+        If one argument is used, it is a scipy ``dlti`` object.
 
         If more arguments are used, they should be arranged in a tuple, the
         following gives the number of elements in the tuple and their
@@ -50,12 +50,12 @@ def cancelPZ(arg1, tol=1e-6):
     **Returns:**
 
     (z, p, k) : tuple
-        A tuple containing zeros, poles and gain (unchanged) after poles, zeros 
+        A tuple containing zeros, poles and gain (unchanged) after poles, zeros
         cancellation.
 
     """
-    if not isinstance(arg1, lti):
-        arg1 = lti(*arg1)
+    if not isinstance(arg1, dlti):
+        arg1 = dlti(*arg1)
     z = copy.copy(arg1.zeros)
     p = copy.copy(arg1.poles)
     k = arg1.gain

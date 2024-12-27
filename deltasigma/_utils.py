@@ -23,7 +23,7 @@ import math
 from fractions import Fraction as Fr
 
 import numpy as np
-from scipy.signal import lti, ss2tf, ss2zpk, zpk2tf
+from scipy.signal import dlti, ss2tf, ss2zpk, zpk2tf
 
 from ._constants import eps
 from ._partitionABCD import partitionABCD
@@ -47,8 +47,11 @@ def rat(x, tol):
 
     .. note:: A, B are of type 'int'
     """
-    return Fr(float(x)).limit_denominator(int(1 / float(tol))).numerator, \
-        Fr(float(x)).limit_denominator(int(1 / float(tol))).denominator
+    return (
+        Fr(float(x)).limit_denominator(int(1 / float(tol))).numerator,
+        Fr(float(x)).limit_denominator(int(1 / float(tol))).denominator,
+    )
+
 
 gcd = math.gcd
 
@@ -57,7 +60,6 @@ lcm.__doc__ = """Calculate the Least Common Multiple of ``a`` and ``b``.\n"""
 
 
 class empty(object):
-
     """An empty function used to hold attributes"""
 
     def __init__(self):
@@ -82,14 +84,14 @@ def mfloor(x):
         if np.iscomplex(z):
             return _mfloor(np.real(z)) + 1j * _mfloor(np.imag(z))
         return np.floor(z) if np.sign(z) >= 0 else -np.ceil(-z)
+
     _internal = np.frompyfunc(_mfloor, 1, 1)
     xf = np.array(_internal(x), dtype=x.dtype)
     return restore_input_form(xf, iform)
 
 
 def carray(x):
-    """Check that x is an ndarray. If not, try to convert it to ndarray.
-    """
+    """Check that x is an ndarray. If not, try to convert it to ndarray."""
     if not isinstance(x, np.ndarray):
         if not isinstance(x, collections.abc.Iterable):
             x = np.array((x,))
@@ -116,8 +118,8 @@ def cplxpair(x, tol=100):
     xcomplex = np.array(list(filter(np.iscomplex, x)))
     xreal = np.sort_complex(xreal)
     xcomplex = np.sort_complex(xcomplex)
-    xcomplex_ipos = xcomplex[xcomplex.imag > 0.]
-    xcomplex_ineg = xcomplex[xcomplex.imag <= 0.]
+    xcomplex_ipos = xcomplex[xcomplex.imag > 0.0]
+    xcomplex_ineg = xcomplex[xcomplex.imag <= 0.0]
     if len(xcomplex_ipos) != len(xcomplex_ineg):
         raise ValueError("Complex numbers can't be paired.")
     res = []
@@ -154,8 +156,12 @@ def minreal(tf, tol=None):
     # then modified considerably
 
     # recursively handle multiple tfs
-    if not _is_zpk(tf) and not _is_num_den(tf) and not _is_A_B_C_D(tf) \
-            and (isinstance(tf, list) or isinstance(tf, tuple)):
+    if (
+        not _is_zpk(tf)
+        and not _is_num_den(tf)
+        and not _is_A_B_C_D(tf)
+        and (isinstance(tf, list) or isinstance(tf, tuple))
+    ):
         ret = []
         for tfi in tf:
             ret += [minreal(tfi, tol)]
@@ -164,16 +170,17 @@ def minreal(tf, tol=None):
     # default accuracy
     sqrt_eps = np.sqrt(eps)
 
-    if (hasattr(tf, 'inputs') and not tf.inputs == 1) or \
-       (hasattr(tf, 'outputs') and not tf.outputs == 1):
+    if (hasattr(tf, "inputs") and not tf.inputs == 1) or (
+        hasattr(tf, "outputs") and not tf.outputs == 1
+    ):
         raise TypeError("Only SISO transfer functions can be evaluated.")
-    if hasattr(tf, 'zeros') and hasattr(tf, 'poles'):
+    if hasattr(tf, "zeros") and hasattr(tf, "poles"):
         # LTI objects have poles and zeros,
         zeros = tf.zeros
         poles = tf.poles
-        if hasattr(tf, 'k'):
+        if hasattr(tf, "k"):
             k = tf.k
-        elif hasattr(tf, 'gain'):
+        elif hasattr(tf, "gain"):
             k = tf.gain
     else:
         # k = num[0] / den[0]
@@ -222,15 +229,13 @@ def diagonal_indices(a, offset=0):
         The indices in the two coordinates. Thanks to ``numpy``'s advanced
         slicing, the diagonal may be accessed with ``A[(xs, ys)]``.
     """
-    di, dj = np.diag_indices_from(a[:min(a.shape), :min(a.shape)])
+    di, dj = np.diag_indices_from(a[: min(a.shape), : min(a.shape)])
     if offset > 0:
-        di, dj = zip(*[(i, j)
-                     for i, j in zip(di, dj + offset) if 0 <= j < a.shape[1]])
+        di, dj = zip(*[(i, j) for i, j in zip(di, dj + offset) if 0 <= j < a.shape[1]])
     elif offset == 0:
         pass
     else:
-        di, dj = zip(*[(i, j)
-                     for i, j in zip(di - offset, dj) if 0 <= i < a.shape[0]])
+        di, dj = zip(*[(i, j) for i, j in zip(di - offset, dj) if 0 <= i < a.shape[0]])
     return di, dj
 
 
@@ -284,13 +289,13 @@ def save_input_form(a):
                  restore_input_form(a, form)
     """
     if np.isscalar(a):
-        ret = 'scalar'
+        ret = "scalar"
     elif isinstance(a, np.ndarray):
         ret = a.shape
     elif type(a) == tuple:
-        ret = 'tuple'
+        ret = "tuple"
     elif type(a) == list:
-        ret = 'list'
+        ret = "list"
     else:
         raise TypeError("Unsupported input %s" % repr(a))
     return ret
@@ -303,15 +308,15 @@ def restore_input_form(a, form):
 
         Note: use `save_input_form(a)` to get the object `form`
     """
-    if form == 'scalar':
+    if form == "scalar":
         a = np.real_if_close(a)
         if not np.isscalar(a):
-            a = a.reshape((1, ))[0]
-    elif form == 'tuple':
+            a = a.reshape((1,))[0]
+    elif form == "tuple":
         if not type(a) == tuple:
             a = [np.real_if_close(i).reshape((1,))[0] for i in a]
             a = tuple(a)
-    elif form == 'list':
+    elif form == "list":
         if not type(a) == list:
             a = [np.real_if_close(i).reshape((1,))[0] for i in a]
             a = list(a)
@@ -321,27 +326,29 @@ def restore_input_form(a, form):
 
 
 def pretty_lti(arg):
-    """Given the lti object ``arg`` return a *pretty* representation."""
+    """Given the dlti object ``arg`` return a *pretty* representation."""
     z, p, k = _get_zpk(arg)
     z = np.atleast_1d(z)
     p = np.atleast_1d(p)
     z = np.round(np.real_if_close(z), 4)
     p = np.round(np.real_if_close(p), 4)
     k = np.round(np.real_if_close(k), 4)
-    signs = {1:'+', -1:'-'}
+    signs = {1: "+", -1: "-"}
     if not len(z) and not len(p):
         return "%g" % k
     ppstr = ["", "", ""]
-    if np.allclose(k, 0., atol=1e-5):
+    if np.allclose(k, 0.0, atol=1e-5):
         return "0"
     if k != 1:
         if np.isreal(k):
             ppstr[1] = "%g " % k
         else:
             # quadrature modulators support
-            ppstr[1] += "(%g %s %gj) " % (np.real(k),
-                                          signs[np.sign(np.imag(k))],
-                                          np.abs(np.imag(k)))
+            ppstr[1] += "(%g %s %gj) " % (
+                np.real(k),
+                signs[np.sign(np.imag(k))],
+                np.abs(np.imag(k)),
+            )
     for i, s in zip((0, 2), (z, p)):
         rz = None
         m = 1
@@ -355,37 +362,44 @@ def pretty_lti(arg):
         for zindex, zi in enumerate(sorted_singularities):
             zi = np.round(np.real_if_close(zi), 4)
             if np.isreal(zi) or quadrature:
-                if len(sorted_singularities) > zindex + 1 and \
-                    sorted_singularities[zindex + 1] == zi:
+                if (
+                    len(sorted_singularities) > zindex + 1
+                    and sorted_singularities[zindex + 1] == zi
+                ):
                     m += 1
                     continue
-                if zi == 0.:
+                if zi == 0.0:
                     ppstr[i] += "z"
                 elif np.isreal(zi):
                     ppstr[i] += "(z %s %g)" % (signs[np.sign(-zi)], np.abs(zi))
                 else:
-                    ppstr[i] += "(z %s %g %s %gj)" % (signs[np.sign(np.real(-zi))],
-                                                      np.abs(np.real(zi)),
-                                                      signs[np.sign(np.imag(-zi))],
-                                                      np.abs(np.imag(zi)))
+                    ppstr[i] += "(z %s %g %s %gj)" % (
+                        signs[np.sign(np.real(-zi))],
+                        np.abs(np.real(zi)),
+                        signs[np.sign(np.imag(-zi))],
+                        np.abs(np.imag(zi)),
+                    )
                 if m == 1:
                     ppstr[i] += " "
                 else:
                     ppstr[i] += "^%d " % m
                 m = 1
             else:
-                if len(sorted_singularities) > zindex + 2 and \
-                    sorted_singularities[zindex + 2] == zi:
-                    m += .5
+                if (
+                    len(sorted_singularities) > zindex + 2
+                    and sorted_singularities[zindex + 2] == zi
+                ):
+                    m += 0.5
                     continue
                 if rz is None:
                     rz = zi
                     continue
-                ppstr[i] += "(z^2 %s %gz %s %g)" % \
-                            (signs[np.sign(np.real_if_close(np.round(-rz - zi, 3)))],
-                             np.abs(np.real_if_close(np.round(-rz - zi, 3))),
-                             signs[np.sign(np.real_if_close(np.round(rz * zi, 4)))],
-                             np.abs(np.real_if_close(np.round(rz * zi, 4))))
+                ppstr[i] += "(z^2 %s %gz %s %g)" % (
+                    signs[np.sign(np.real_if_close(np.round(-rz - zi, 3)))],
+                    np.abs(np.real_if_close(np.round(-rz - zi, 3))),
+                    signs[np.sign(np.real_if_close(np.round(rz * zi, 4)))],
+                    np.abs(np.real_if_close(np.round(rz * zi, 4))),
+                )
                 if m == 1:
                     ppstr[i] += " "
                 else:
@@ -393,17 +407,17 @@ def pretty_lti(arg):
                 rz = None
                 m = 1
         ppstr[i] = ppstr[i][:-1] if len(ppstr[i]) else "1"
-    if ppstr[2] == '1':
+    if ppstr[2] == "1":
         return ppstr[1] + ppstr[0]
     else:
-        if ppstr[0] == '1' and len(ppstr[1]) and float(ppstr[1]) != 1.:
+        if ppstr[0] == "1" and len(ppstr[1]) and float(ppstr[1]) != 1.0:
             ppstr[0] = ppstr[1][:-1]
             ppstr[1] = ""
         space_pad_ln = len(ppstr[1])
         fraction_line = "-" * (max(len(ppstr[0]), len(ppstr[2])) + 2)
         ppstr[1] += fraction_line
-        ppstr[0] = " "*space_pad_ln + ppstr[0].center(len(fraction_line))
-        ppstr[2] = " "*space_pad_ln + ppstr[2].center(len(fraction_line))
+        ppstr[0] = " " * space_pad_ln + ppstr[0].center(len(fraction_line))
+        ppstr[2] = " " * space_pad_ln + ppstr[2].center(len(fraction_line))
     return "\n".join(ppstr)
 
 
@@ -439,12 +453,12 @@ def _get_zpk(arg, input=0):
         # ABCD matrix
         A, B, C, D = partitionABCD(arg)
         z, p, k = ss2zpk(A, B, C, D, input=input)
-    elif isinstance(arg, lti):
+    elif isinstance(arg, dlti):
         z, p, k = arg.zeros, arg.poles, arg.gain
     elif _is_zpk(arg):
         z, p, k = np.atleast_1d(arg[0]), np.atleast_1d(arg[1]), arg[2]
     elif _is_num_den(arg):
-        sys = lti(*arg).to_zpk()
+        sys = dlti(*arg).to_zpk()
         z, p, k = sys.zeros, sys.poles, sys.gain
     elif _is_A_B_C_D(arg):
         z, p, k = ss2zpk(*arg, input=input)
@@ -452,8 +466,8 @@ def _get_zpk(arg, input=0):
         ri = 0
         for i in arg:
             # Note we do not check if the user has assembled a list with
-            # mismatched lti representations.
-            if hasattr(i, 'B'):
+            # mismatched dlti representations.
+            if hasattr(i, "B"):
                 iis = i.B.shape[1]
                 if input < ri + iis:
                     z, p, k = ss2zpk(i.A, i.B, i.C, i.D, input=input - ri)
@@ -471,7 +485,7 @@ def _get_zpk(arg, input=0):
                     continue
             else:
                 if ri == input:
-                    sys = lti(*i)
+                    sys = dlti(*i)
                     z, p, k = sys.zeros, sys.poles, sys.gain
                     break
                 else:
@@ -479,9 +493,10 @@ def _get_zpk(arg, input=0):
                     continue
                 ri += 1
         if (z, p, k) == (None, None, None):
-            raise ValueError("The LTI representation does not have enough" +
-                             "inputs: max %d, looking for input %d" %
-                             (ri - 1, input))
+            raise ValueError(
+                "The LTI representation does not have enough"
+                + "inputs: max %d, looking for input %d" % (ri - 1, input)
+            )
     else:
         raise TypeError("Unknown LTI representation: %s" % arg)
     return z, p, k
@@ -519,7 +534,7 @@ def _get_num_den(arg, input=0):
         # ABCD matrix
         A, B, C, D = partitionABCD(arg)
         num, den = ss2tf(A, B, C, D, input=input)
-    elif isinstance(arg, lti):
+    elif isinstance(arg, dlti):
         arx = arg.to_tf()
         num, den = arx.num, arx.den
     elif _is_num_den(arg):
@@ -533,7 +548,7 @@ def _get_num_den(arg, input=0):
         for i in arg:
             # Note we do not check if the user has assembled a list with
             # mismatched representations.
-            if hasattr(i, 'B'):  # lti
+            if hasattr(i, "B"):  # dlti
                 iis = i.B.shape[1]
                 if input < ri + iis:
                     num, den = ss2tf(i.A, i.B, i.C, i.D, input=input - ri)
@@ -541,19 +556,19 @@ def _get_num_den(arg, input=0):
                 else:
                     ri += iis
             else:
-                sys = lti(*i)
+                sys = dlti(*i)
                 iis = sys.B.shape[1]
                 if input < ri + iis:
-                    num, den = ss2tf(
-                        sys.A, sys.B, sys.C, sys.D, input=input - ri)
+                    num, den = ss2tf(sys.A, sys.B, sys.C, sys.D, input=input - ri)
                     break
                 else:
                     ri += iis
 
         if (num, den) == (None, None):
-            raise ValueError("The LTI representation does not have enough" +
-                             "inputs: max %d, looking for input %d" %
-                             (ri - 1, input))
+            raise ValueError(
+                "The LTI representation does not have enough"
+                + "inputs: max %d, looking for input %d" % (ri - 1, input)
+            )
     else:
         raise TypeError("Unknown LTI representation: %s" % arg)
 
@@ -604,22 +619,22 @@ def _getABCD(arg):
     if isinstance(arg, np.ndarray):
         # ABCD matrix
         A, B, C, D = partitionABCD(arg)
-    elif isinstance(arg, lti):
+    elif isinstance(arg, dlti):
         arx = arg.to_ss()
         A, B, C, D = arx.A, arx.B, arx.C, np.atleast_2d(arx.D)
     elif _is_zpk(arg) or _is_num_den(arg) or _is_A_B_C_D(arg):
-        sys = lti(*arg).to_ss()
+        sys = dlti(*arg).to_ss()
         A, B, C, D = sys.A, sys.B, sys.C, sys.D
     elif isinstance(arg, collections.abc.Iterable):
         A, B, C, D = None, None, None, None
         for i in arg:
             # Note we do not check if the user has assembled a list with
-            # mismatched lti representations.
-            sys = lti(*i).to_ss() if not hasattr(i, 'A') else i
+            # mismatched dlti representations.
+            sys = dlti(*i).to_ss() if not hasattr(i, "A") else i
             if A is None:
                 A = sys.A
             elif not np.allclose(sys.A, A, atol=1e-8, rtol=1e-5):
-                raise ValueError("Mismatched lti list, A matrix disagreement.")
+                raise ValueError("Mismatched dlti list, A matrix disagreement.")
             else:
                 pass
             if B is None:
@@ -629,7 +644,7 @@ def _getABCD(arg):
             if C is None:
                 C = sys.C
             elif not np.allclose(sys.C, C, atol=1e-8, rtol=1e-5):
-                raise ValueError("Mismatched lti list, C matrix disagreement.")
+                raise ValueError("Mismatched dlti list, C matrix disagreement.")
             if D is None:
                 D = sys.D
             else:
@@ -641,25 +656,35 @@ def _getABCD(arg):
 
 def _is_zpk(arg):
     """Can the argument be safely assumed to be a zpk tuple?"""
-    return isinstance(arg, collections.abc.Iterable) and len(arg) == 3 and \
-        isinstance(arg[0], collections.abc.Iterable) and \
-        isinstance(arg[1], collections.abc.Iterable) and np.isscalar(arg[2])
+    return (
+        isinstance(arg, collections.abc.Iterable)
+        and len(arg) == 3
+        and isinstance(arg[0], collections.abc.Iterable)
+        and isinstance(arg[1], collections.abc.Iterable)
+        and np.isscalar(arg[2])
+    )
 
 
 def _is_num_den(arg):
     """Can the argument be safely assumed to be a num, den tuple?"""
-    return isinstance(arg, collections.abc.Iterable) and len(arg) == 2 and \
-        isinstance(arg[0], collections.abc.Iterable) and \
-        isinstance(arg[1], collections.abc.Iterable)
+    return (
+        isinstance(arg, collections.abc.Iterable)
+        and len(arg) == 2
+        and isinstance(arg[0], collections.abc.Iterable)
+        and isinstance(arg[1], collections.abc.Iterable)
+    )
 
 
 def _is_A_B_C_D(arg):
     """Can the argument be safely assumed to be an (A, B, C, D) tuple?"""
-    return isinstance(arg, collections.abc.Iterable) and len(arg) == 4 and \
-        (isinstance(arg[0], collections.abc.Iterable) or np.is_scalar(arg[0])) and \
-        (isinstance(arg[1], collections.abc.Iterable) or np.is_scalar(arg[1])) and \
-        (isinstance(arg[2], collections.abc.Iterable) or np.is_scalar(arg[2])) and \
-        (isinstance(arg[3], collections.abc.Iterable) or np.is_scalar(arg[3]))
+    return (
+        isinstance(arg, collections.abc.Iterable)
+        and len(arg) == 4
+        and (isinstance(arg[0], collections.abc.Iterable) or np.is_scalar(arg[0]))
+        and (isinstance(arg[1], collections.abc.Iterable) or np.is_scalar(arg[1]))
+        and (isinstance(arg[2], collections.abc.Iterable) or np.is_scalar(arg[2]))
+        and (isinstance(arg[3], collections.abc.Iterable) or np.is_scalar(arg[3]))
+    )
 
 
 def mround(x):
@@ -690,11 +715,11 @@ def mround(x):
         """Base function to generate the ufunc round"""
         z = np.real_if_close(z)
         if np.iscomplex(z):
-            return _mround(np.real(z)) + 1j*_mround(np.imag(z))
+            return _mround(np.real(z)) + 1j * _mround(np.imag(z))
         s = 1 if z >= 0 else -1
-        res = z - s*(abs(z) % 1) if abs(z) % 1 < .5 \
-              else z + s*(1 - (abs(z)%1))
+        res = z - s * (abs(z) % 1) if abs(z) % 1 < 0.5 else z + s * (1 - (abs(z) % 1))
         return res
+
     _internal = np.frompyfunc(_mround, 1, 1)
     xf = np.array(_internal(x), dtype=x.dtype)
     return restore_input_form(xf, iform)

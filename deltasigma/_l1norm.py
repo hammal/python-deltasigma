@@ -21,7 +21,7 @@ from __future__ import division
 from warnings import warn
 
 import numpy as np
-from scipy.signal import dimpulse, lti
+from scipy.signal import dimpulse, dlti
 
 from ._utils import _get_zpk, _is_A_B_C_D, _is_num_den, _is_zpk
 
@@ -29,35 +29,37 @@ from ._utils import _get_zpk, _is_A_B_C_D, _is_num_den, _is_zpk
 def l1norm(H):
     """Compute the l1-norm of a z-domain transfer function.
 
-        The norm is evaluated over the first 100 samples.
+    The norm is evaluated over the first 100 samples.
 
-        **Parameters:**
+    **Parameters:**
 
-        H : sequence or lti object
-            Any supported LTI representation is accepted.
+    H : sequence or dlti object
+        Any supported LTI representation is accepted.
 
-        **Returns:**
+    **Returns:**
 
-        l1normH : float
-            The L1 norm of ``H``.
+    l1normH : float
+        The L1 norm of ``H``.
 
-        .. note:
-            LTI objects are translated to ZPK tuples, with possible
-            rounding errors.
+    .. note:
+        LTI objects are translated to ZPK tuples, with possible
+        rounding errors.
 
     """
     if _is_zpk(H):
         z, p, k = H
-        HP = (z, p, k, 1.)
+        HP = (z, p, k, 1.0)
     elif _is_num_den(H):
         num, den = H
-        HP = (num, den, 1.)
+        HP = (num, den, 1.0)
     elif _is_A_B_C_D(H):
         A, B, C, D = H
-        HP = (A, B, C, D, 1.)
-    elif isinstance(H, lti):
-        warn('l1norm() got an LTI object, translated to zpk form, rounding errors possible.')
+        HP = (A, B, C, D, 1.0)
+    elif isinstance(H, dlti):
+        warn(
+            "l1norm() got an LTI object, translated to zpk form, rounding errors possible."
+        )
         z, p, k = _get_zpk(H)
-        HP = (z, p, k, 1.)
+        HP = (z, p, k, 1.0)
     _, y = dimpulse(HP, t=np.arange(100))
     return np.sum(np.abs(y[0]))

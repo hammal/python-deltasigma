@@ -26,7 +26,7 @@ def mod2():
 
     **Returns:**
 
-    ABCD, NTF, STF : a tuple of (ndarray, lti, lti)
+    ABCD, NTF, STF : a tuple of (ndarray, dlti, dlti)
         The elements are the ABCD matrix (ndarray),
         the NTF (LTI object), the STF (LTI object).
 
@@ -34,13 +34,13 @@ def mod2():
 
         If a version of the ``scipy`` library equal to 0.16.x or greater is in
         use, the NTF and STF objects will be ``ZeroPolesGain`` objects, a
-        subclass of the scipy LTI object (``scipy.signal.lti``).
+        subclass of the scipy LTI object (``scipy.signal.dlti``).
 
     """
-    A = np.array([[1., 0.], [1., 1.]])
-    B = np.array([[1., -1.], [1., -2.]])
-    C = np.array([[0., 1.]])
-    D = np.array([[0., 0.]])
+    A = np.array([[1.0, 0.0], [1.0, 1.0]])
+    B = np.array([[1.0, -1.0], [1.0, -2.0]])
+    C = np.array([[0.0, 1.0]])
+    D = np.array([[0.0, 0.0]])
     ABCD = np.vstack((np.hstack((A, B)), np.hstack((C, D))))
     H, G = calculateTF(ABCD)
     return ABCD, H, G

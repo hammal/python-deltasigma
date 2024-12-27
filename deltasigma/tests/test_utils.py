@@ -5,7 +5,7 @@
 # Copyright 2014 Giuseppe Venturini
 # This file is part of python-deltasigma.
 #
-# python-deltasigma is a 1:1 Python replacement of Richard Schreier's 
+# python-deltasigma is a 1:1 Python replacement of Richard Schreier's
 # MATLAB delta sigma toolbox (aka "delsigma"), upon which it is heavily based.
 # The delta sigma toolbox is (c) 2009, Richard Schreier.
 #
@@ -22,24 +22,33 @@ import unittest
 import numpy as np
 import deltasigma as ds
 
-from scipy.signal import lti
+from scipy.signal import dlti
 
 from deltasigma import synthesizeNTF
 
 from deltasigma._utils import *
-from deltasigma._utils import (_get_zpk, _get_num_den, _getABCD, _is_zpk,
-                               _is_num_den, _is_A_B_C_D)
+from deltasigma._utils import (
+    _get_zpk,
+    _get_num_den,
+    _getABCD,
+    _is_zpk,
+    _is_num_den,
+    _is_A_B_C_D,
+)
 from deltasigma._constants import eps
+
 
 def test_rat():
     """Test function for rat()"""
     import numpy.random as rnd
+
     for _ in range(10):
         n, d = rnd.randint(1, 5000), rnd.randint(1, 5000)
         fr = float(n) / float(d)
         nt, dt = rat(fr, tol=200e-6)
         assert np.allclose(
-            (n / float(d) - nt / float(dt),), (0.,), atol=200e-6, rtol=1e-12)
+            (n / float(d) - nt / float(dt),), (0.0,), atol=200e-6, rtol=1e-12
+        )
 
 
 def test_gcd_lcm():
@@ -59,7 +68,7 @@ def test_mfloor():
     tresf = mfloor(tv)
     assert np.allclose(tres, tresf, atol=1e-8, rtol=1e-5)
     # w complex values.
-    tv = [-1.9,  -0.2,  3.4,  5.6,  7.0,  2.4 + 3.6j]
+    tv = [-1.9, -0.2, 3.4, 5.6, 7.0, 2.4 + 3.6j]
     tres = [-2.0, -1.0, 3.0, 5.0, 7.0, (2 + 3j)]
     assert mfloor(tv) == tres
 
@@ -87,16 +96,23 @@ def test_carray():
 
 
 def test_cplxpair():
-    """Test function for cplxpair()
-    """
+    """Test function for cplxpair()"""
     a = np.array(
-        [1 + eps * 20j, 1.1 + 2j, 1.1 - (2 + 50 * eps) * 1j, .1 + (1 + 99 * eps) * .2j, .1 - .2j])
+        [
+            1 + eps * 20j,
+            1.1 + 2j,
+            1.1 - (2 + 50 * eps) * 1j,
+            0.1 + (1 + 99 * eps) * 0.2j,
+            0.1 - 0.2j,
+        ]
+    )
     assert np.allclose(
-        cplxpair(a), np.array(
-            [0.1 - 0.2j, 0.1 + 0.2j, 1.1 - 2.j, 1.1 + 2.j, 1.0 + 0.j]),
-        atol=100 * eps)
+        cplxpair(a),
+        np.array([0.1 - 0.2j, 0.1 + 0.2j, 1.1 - 2.0j, 1.1 + 2.0j, 1.0 + 0.0j]),
+        atol=100 * eps,
+    )
     # Mismatched imaginary part with correct sign
-    a = (1, 1+2j, 1-2.4j) # this should fail. The complex sing. are not conj.
+    a = (1, 1 + 2j, 1 - 2.4j)  # this should fail. The complex sing. are not conj.
     try:
         cplxpair(a)
         # ValueError should be raised!
@@ -104,7 +120,7 @@ def test_cplxpair():
     except ValueError:
         assert True
     # Mismatched real part with correct imaginary part
-    a = (1, 1+2j, 2-2j) # this should fail. The complex sing. are not conj.
+    a = (1, 1 + 2j, 2 - 2j)  # this should fail. The complex sing. are not conj.
     try:
         cplxpair(a)
         # ValueError should be raised!
@@ -112,7 +128,7 @@ def test_cplxpair():
     except ValueError:
         assert True
     # Mismatched real part with mismatched sign imaginary part
-    a = (1, 1+2j, 2+2j) # this should fail. The complex sing. are not conj.
+    a = (1, 1 + 2j, 2 + 2j)  # this should fail. The complex sing. are not conj.
     try:
         cplxpair(a)
         # ValueError should be raised!
@@ -120,9 +136,9 @@ def test_cplxpair():
     except ValueError:
         assert True
 
+
 def test_diagonal_indices():
-    """Test function for diagonal_indices()
-    """
+    """Test function for diagonal_indices()"""
     a = np.arange(1, 26)
     a = a.reshape((5, 5))
     d = a[diagonal_indices(a)]
@@ -149,15 +165,21 @@ def test_diagonal_indices():
 
 
 def test_circshift():
-    """Test function for circshift()
-    """
+    """Test function for circshift()"""
     A = np.arange(1, 10).reshape((3, 3))
     shift = np.array((1, -1))
     Ashifted = circshift(A, shift)
     Ares = np.array(((8, 9, 7), (2, 3, 1), (5, 6, 4)))
     assert np.allclose(Ashifted, Ares)
-    a = np.array([1, 2, 3, 4, 5]) # test for shift being a scalar
-    assert np.allclose(circshift(a, 1), a[np.array((4, 0, 1, 2, 3), )])
+    a = np.array([1, 2, 3, 4, 5])  # test for shift being a scalar
+    assert np.allclose(
+        circshift(a, 1),
+        a[
+            np.array(
+                (4, 0, 1, 2, 3),
+            )
+        ],
+    )
 
 
 def test_save_input_form():
@@ -177,29 +199,31 @@ def test_save_input_form():
 def test_get_zpk():
     """Test function for _get_zpk()"""
     from scipy.signal import zpk2ss
-    z = (.4,)
-    p = (.9, .1 + .2j, .1 - .2j)
-    k = .4
+
+    z = (0.4,)
+    p = (0.9, 0.1 + 0.2j, 0.1 - 0.2j)
+    k = 0.4
     zt, pt, kt = _get_zpk(zpk2ss(z, p, k))
     assert np.allclose(zt, z, atol=1e-8, rtol=1e-5)
     assert np.allclose(pt, p, atol=1e-8, rtol=1e-5)
-    assert np.allclose((kt, ), (k, ), atol=1e-8, rtol=1e-5)
+    assert np.allclose((kt,), (k,), atol=1e-8, rtol=1e-5)
     zt, pt, kt = _get_zpk(zpk2tf(z, p, k))
     assert np.allclose(zt, z, atol=1e-8, rtol=1e-5)
     assert np.allclose(pt, p, atol=1e-8, rtol=1e-5)
-    assert np.allclose((kt, ), (k, ), atol=1e-8, rtol=1e-5)
-    zt, pt, kt = _get_zpk(lti(z, p, k))
+    assert np.allclose((kt,), (k,), atol=1e-8, rtol=1e-5)
+    zt, pt, kt = _get_zpk(dlti(z, p, k))
     assert np.allclose(zt, z, atol=1e-8, rtol=1e-5)
     assert np.allclose(pt, p, atol=1e-8, rtol=1e-5)
-    assert np.allclose((kt, ), (k, ), atol=1e-8, rtol=1e-5)
+    assert np.allclose((kt,), (k,), atol=1e-8, rtol=1e-5)
 
 
 def test_get_num_den():
     """Test function for _get_num_den()"""
     from scipy.signal import zpk2ss
-    z = (.4,)
-    p = (.9, .1 + .2j, .1 - .2j)
-    k = .4
+
+    z = (0.4,)
+    p = (0.9, 0.1 + 0.2j, 0.1 - 0.2j)
+    k = 0.4
     num, den = zpk2tf(z, p, k)
     numt, dent = _get_num_den((num, den))  # num, den
     assert np.allclose(numt, num, atol=1e-8, rtol=1e-5)
@@ -207,7 +231,7 @@ def test_get_num_den():
     numt, dent = _get_num_den((z, p, k))  # zpk
     assert np.allclose(numt, num, atol=1e-8, rtol=1e-5)
     assert np.allclose(dent, den, atol=1e-8, rtol=1e-5)
-    numt, dent = _get_num_den(lti(z, p, k))  # LTI
+    numt, dent = _get_num_den(dlti(z, p, k))  # LTI
     assert np.allclose(numt, num, atol=1e-8, rtol=1e-5)
     assert np.allclose(dent, den, atol=1e-8, rtol=1e-5)
     assert len(numt.shape) == 1
@@ -217,14 +241,11 @@ def test_get_num_den():
     numt, dent = _get_num_den((A, B, C, D))  # A,B,C,D
     assert np.allclose(numt, num, atol=1e-8, rtol=1e-5)
     assert np.allclose(dent, den, atol=1e-8, rtol=1e-5)
-    ABCD = np.vstack((
-                     np.hstack((A, B)),
-                     np.hstack((C, D))
-                     ))
+    ABCD = np.vstack((np.hstack((A, B)), np.hstack((C, D))))
     numt, dent = _get_num_den(ABCD)  # A,B,C,D
     assert np.allclose(numt, num, atol=1e-8, rtol=1e-5)
     assert np.allclose(dent, den, atol=1e-8, rtol=1e-5)
-    H = [[1],[2]] # check no 0-length arrays are returned
+    H = [[1], [2]]  # check no 0-length arrays are returned
     numt, dent = _get_num_den(H)
     assert np.allclose(numt, 1, atol=1e-8, rtol=1e-5)
     assert np.allclose(dent, 2, atol=1e-8, rtol=1e-5)
@@ -235,8 +256,9 @@ def test_get_num_den():
 def test_minreal():
     """Test function for minreal()"""
     from scipy.signal import zpk2ss
+
     z = np.array([0, 1])
-    p = np.array([1, .5 + .5j, .5 - .5j])
+    p = np.array([1, 0.5 + 0.5j, 0.5 - 0.5j])
     k = 1
     zt = z[:-1]
     pt = p[1:]
@@ -262,7 +284,7 @@ def test_minreal():
     assert np.allclose(zeros, zt, atol=1e-8, rtol=1e-5)
     assert np.allclose(poles, poles, atol=1e-8, rtol=1e-5)
     assert np.allclose((k,), (gain,), atol=1e-8, rtol=1e-5)
-    inobj = lti(z, p, k)
+    inobj = dlti(z, p, k)
     ltiobj = minreal(inobj)
     zeros, poles, gain = _get_zpk(ltiobj)
     poles.sort()
@@ -275,20 +297,27 @@ def test_pretty_lti():
     """Test function for pretty_lti()"""
     H = synthesizeNTF(5, 32, 1)
     tv = pretty_lti(H)
-    res = '      (z^2 - 1.992z + 0.9999) (z^2 - 1.997z + 1) (z - 1)     \n' + \
-          '-------------------------------------------------------------\n' + \
-          ' (z^2 - 1.613z + 0.665) (z^2 - 1.796z + 0.8549) (z - 0.7778) '
+    res = (
+        "      (z^2 - 1.992z + 0.9999) (z^2 - 1.997z + 1) (z - 1)     \n"
+        + "-------------------------------------------------------------\n"
+        + " (z^2 - 1.613z + 0.665) (z^2 - 1.796z + 0.8549) (z - 0.7778) "
+    )
     assert res == tv
     assert int(pretty_lti(([], [], 2))) == 2
-    assert pretty_lti([[1], [], 2]) == '2 (z - 1)'
-    assert pretty_lti([[], [.22222222], 2]) == \
-        '      2       \n--------------\n (z - 0.2222) '
-    assert pretty_lti(((0, 0, 1), (1, 2-1j, 2+1j, 2-1j, 2+1j), 5)) == \
-        '         z^2 (z - 1)        \n' + \
-        '5 --------------------------\n' + \
-        '   (z^2 - 4z + 5)^2 (z - 1) '
+    assert pretty_lti([[1], [], 2]) == "2 (z - 1)"
+    assert (
+        pretty_lti([[], [0.22222222], 2])
+        == "      2       \n--------------\n (z - 0.2222) "
+    )
+    assert (
+        pretty_lti(((0, 0, 1), (1, 2 - 1j, 2 + 1j, 2 - 1j, 2 + 1j), 5))
+        == "         z^2 (z - 1)        \n"
+        + "5 --------------------------\n"
+        + "   (z^2 - 4z + 5)^2 (z - 1) "
+    )
     # check we can return a repr for a quadrature TF
-    pretty_lti(((1.+2j, 1.+3j), (-5+2j, -3-1j), 10))
+    pretty_lti(((1.0 + 2j, 1.0 + 3j), (-5 + 2j, -3 - 1j), 10))
+
 
 def test_mround():
     """Test function for mfloor()"""
@@ -300,12 +329,13 @@ def test_mround():
     assert np.allclose(tres, tresm, atol=1e-8, rtol=1e-5)
     # w complex values.
     tv = [-1.9, -0.5, -0.2, 3.4, 4.5, 5.6, 7.0, 2.4 + 3.6j]
-    tres = [-2.0, -1.0,  0.0, 3.0, 5.0, 6.0, 7.0, 2.0 + 4.0j]
+    tres = [-2.0, -1.0, 0.0, 3.0, 5.0, 6.0, 7.0, 2.0 + 4.0j]
     assert mround(tv) == tres
+
 
 def test_getABCD():
     """Test function for _getABCD()"""
-    H = lti(*((1.,),(-2, -2), 1))
+    H = dlti(*((1.0,), (-2, -2), 1))
     Htf = H.to_tf()
     Hss = H.to_ss()
     x1 = _getABCD(H)
@@ -317,27 +347,30 @@ def test_getABCD():
         assert np.allclose(y1, y3)
         assert np.allclose(y1, y4)
 
+
 def test_is_zpk():
     """Test function for _is_zpk()"""
-    assert _is_zpk([(1,2,3), (1,2), 2])
-    assert _is_zpk([np.array((1,2,3)), np.array((1,2)), 2])
+    assert _is_zpk([(1, 2, 3), (1, 2), 2])
+    assert _is_zpk([np.array((1, 2, 3)), np.array((1, 2)), 2])
     assert _is_zpk([[1], [2], 1])
     assert _is_zpk(((1, 2), (1, 2, 3), 1))
     assert _is_zpk(((1,), (), 1e-17))
-    assert not _is_zpk([(1,2), (3,4), ()])
-    assert not _is_zpk(lti((1, 2), (1, 2, 3), 1))
+    assert not _is_zpk([(1, 2), (3, 4), ()])
+    assert not _is_zpk(dlti((1, 2), (1, 2, 3), 1))
     assert not _is_zpk(((1,), (2,)))
+
 
 def test_is_num_den():
     """Test function for _is_num_den()"""
-    assert _is_num_den([(1,2,3), (1,2)])
-    assert _is_num_den([np.array((1,2,3)), np.array((1,2))])
+    assert _is_num_den([(1, 2, 3), (1, 2)])
+    assert _is_num_den([np.array((1, 2, 3)), np.array((1, 2))])
     assert _is_num_den([[1], [2]])
     assert _is_num_den(((1, 2), (1, 2, 3)))
     assert _is_num_den(((1,), ()))
-    assert not _is_num_den([(1,2), (3,4), (1,)])
-    assert not _is_num_den(lti((1, 2), (1, 2, 3), 1))
+    assert not _is_num_den([(1, 2), (3, 4), (1,)])
+    assert not _is_num_den(dlti((1, 2), (1, 2, 3), 1))
     assert not _is_num_den(((1,), (2,), 1))
+
 
 def test_is_A_B_C_D():
     """Test function for _is_A_B_C_D()"""
@@ -346,4 +379,3 @@ def test_is_A_B_C_D():
     C = np.zeros((2, 3))
     D = np.ones((2, 2))
     assert _is_A_B_C_D((A, B, C, D))
-

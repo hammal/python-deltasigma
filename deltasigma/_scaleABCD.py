@@ -94,7 +94,7 @@ def scaleABCD(ABCD, nlev=2, f=0.0, xlim=1.0, ymax=None, umax=None, N_sim=100000,
         # Simulate the modulator with DC or sine wave inputs to detect its stable
         # input range.
         # First get a rough estimate of umax.
-        ulist = np.arange(0.1, 1.1, 0.1) * (nlev - 1)
+        ulist = np.arange(0.1, 1.1, 0.1) * (nlev - 1.0)
         umax = nlev - 1.0
         N = 1000
         u0 = np.hstack(

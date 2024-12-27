@@ -899,7 +899,7 @@ __author__ = "Giuseppe Venturini and the python-deltasigma contributors"
 __copyright__ = "Copyright 2013, Giuseppe Venturini"
 __credits__ = ["Giuseppe Venturini"]
 __license__ = "BSD 2-Clause License"
-__version__ = '0.2.5'
+__version__ = "0.2.5"
 __maintainer__ = "Giuseppe Venturini"
 __email__ = "ggventurini+github@gmail.com"
 __status__ = "Stable"
@@ -914,10 +914,11 @@ __status__ = "Stable"
 # if not os.system('python -c "import matplotlib.pyplot as plt;plt.figure()"')
 import matplotlib
 import os
-if not ('DISPLAY' in os.environ
-        or os.name =='nt'
-        or os.environ.get('READTHEDOCS', None)):
-    matplotlib.use('Agg')
+
+if not (
+    "DISPLAY" in os.environ or os.name == "nt" or os.environ.get("READTHEDOCS", None)
+):
+    matplotlib.use("Agg")
 
 from ._DocumentNTF import DocumentNTF
 from ._PlotExampleSpectrum import PlotExampleSpectrum
@@ -983,7 +984,7 @@ from ._realizeQNTF import realizeQNTF
 from ._rms import rms
 from ._rmsGain import rmsGain
 from ._scaleABCD import scaleABCD
-from ._simulateDSM import simulateDSM, simulation_backends
+from ._simulateDSM import simulateDSM
 from ._simulateQDSM import simulateQDSM
 from ._simulateQSNR import simulateQSNR
 from ._simulateSNR import simulateSNR
@@ -998,4 +999,5 @@ from ._undbp import undbp
 from ._undbv import undbv
 from ._utils import circshift, cplxpair, mfloor, mround, pretty_lti, rat, gcd, lcm
 from ._zinc import zinc
+
 # from . import PosInvSet
