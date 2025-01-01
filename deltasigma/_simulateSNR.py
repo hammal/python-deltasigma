@@ -98,7 +98,7 @@ def simulateSNR(arg1, osr, amp=None, f0=0, nlev=2, f=None, k=13, quadrature=Fals
 
     .. math::
 
-        f = \\frac{1}{4\ \mathrm{OSR}}
+        f = \\frac{1}{4\\mathrm{OSR}}
 
     k : int, optional
         The number of samples used to compute the FFT is set by the integer
